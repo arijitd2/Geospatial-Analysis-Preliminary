@@ -1,0 +1,46 @@
+!pip install earthengine-api #earth-engine Python API
+!earthengine authenticate
+from google.colab import drive
+drive.mount('/content/drive')
+from google.colab import auth
+auth.authenticate_user()
+# Earth Engine Python API
+import ee
+ee.Initialize()
+import folium
+
+# Define the URL format used for Earth Engine generated map tiles.
+EE_TILES = 'https://earthengine.googleapis.com/map/{mapid}/{{z}}/{{x}}/{{y}}?token={token}'
+
+print('Folium version: ' + folium.__version__)
+
+
+#@title Mapdisplay: Display GEE objects using folium.
+def Mapdisplay(center, dicc, Tiles="OpensTreetMap",zoom_start=10):
+    '''
+    :param center: Center of the map (Latitude and Longitude).
+    :param dicc: Earth Engine Geometries or Tiles dictionary
+    :param Tiles: Mapbox Bright,Mapbox Control Room,Stamen Terrain,Stamen Toner,stamenwatercolor,cartodbpositron.
+    :zoom_start: Initial zoom level for the map.
+    :return: A folium.Map object.
+    '''
+    mapViz = folium.Map(location=center,tiles=Tiles, zoom_start=zoom_start)
+    for k,v in dicc.items():
+      if ee.image.Image in [type(x) for x in v.values()]:
+        folium.TileLayer(
+            tiles = EE_TILES.format(**v),
+            attr  = 'Google Earth Engine',
+            overlay =True,
+            name  = k
+          ).add_to(mapViz)
+      else:
+        folium.GeoJson(
+        data = v,
+        name = k
+          ).add_to(mapViz)
+    mapViz.add_child(folium.LayerControl())
+    return mapViz
+
+
+Lat 16,24
+Lon 72,78
